@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "incident-timeline"
+version = "0.1.0"
+description = "Correlate a pcap-triage report with an authlog-sessions report by address."
+requires-python = ">=3.8"
+
+[project.scripts]
+incident-timeline = "incidenttimeline.cli:main"
+
+[tool.setuptools]
+packages = ["incidenttimeline"]
