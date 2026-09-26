@@ -32,18 +32,23 @@ def build_parser():
     return parser
 
 
-def _load(paths):
+def _load(paths, kind):
     reports = []
     for path in paths:
         try:
             with open(path, "r", encoding="utf-8") as handle:
-                reports.append(json.load(handle))
+                data = json.load(handle)
         except FileNotFoundError:
             print(f"incident-timeline: no such file: {path}", file=sys.stderr)
-            raise SystemExit(2)
+            return None
         except json.JSONDecodeError as error:
             print(f"incident-timeline: {path} is not valid JSON: {error}", file=sys.stderr)
-            raise SystemExit(2)
+            return None
+        if not isinstance(data, dict):
+            print(f"incident-timeline: {path} is not a {kind} report "
+                  "(the JSON is not an object)", file=sys.stderr)
+            return None
+        reports.append(data)
     return reports
 
 
@@ -58,8 +63,12 @@ def main(argv=None):
         print("incident-timeline: --top has to be at least 1", file=sys.stderr)
         return 2
 
-    pcap_reports = _load(args.pcap)
-    auth_reports = _load(args.auth)
+    pcap_reports = _load(args.pcap, "--pcap")
+    if pcap_reports is None:
+        return 2
+    auth_reports = _load(args.auth, "--auth")
+    if auth_reports is None:
+        return 2
 
     entities, capture_first, capture_last = core.correlate(pcap_reports, auth_reports)
 
