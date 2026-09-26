@@ -14,9 +14,9 @@ def build_parser():
         prog="incident-timeline",
         description="Correlate a pcap-triage report with an authlog-sessions report by address.")
     parser.add_argument("--pcap", action="append", default=[], metavar="FILE",
-                        help="a pcap-triage --json report; repeat for more than one")
+                        help="a pcap-triage --json report, or - for stdin; repeat for more than one")
     parser.add_argument("--auth", action="append", default=[], metavar="FILE",
-                        help="an authlog-sessions --json report; repeat for more than one")
+                        help="an authlog-sessions --json report, or - for stdin; repeat for more than one")
     parser.add_argument("-n", "--top", type=int, default=20,
                         help="addresses to print in full (default: 20)")
     parser.add_argument("--json", action="store_true",
@@ -34,18 +34,29 @@ def build_parser():
 
 def _load(paths, kind):
     reports = []
+    stdin_used = False
     for path in paths:
         try:
-            with open(path, "r", encoding="utf-8") as handle:
-                data = json.load(handle)
+            if path == "-":
+                if stdin_used:
+                    print("incident-timeline: stdin ('-') can only be read once per run",
+                          file=sys.stderr)
+                    return None
+                stdin_used = True
+                data = json.load(sys.stdin)
+            else:
+                with open(path, "r", encoding="utf-8") as handle:
+                    data = json.load(handle)
         except FileNotFoundError:
             print(f"incident-timeline: no such file: {path}", file=sys.stderr)
             return None
         except json.JSONDecodeError as error:
-            print(f"incident-timeline: {path} is not valid JSON: {error}", file=sys.stderr)
+            name = "stdin" if path == "-" else path
+            print(f"incident-timeline: {name} is not valid JSON: {error}", file=sys.stderr)
             return None
         if not isinstance(data, dict):
-            print(f"incident-timeline: {path} is not a {kind} report "
+            name = "stdin" if path == "-" else path
+            print(f"incident-timeline: {name} is not a {kind} report "
                   "(the JSON is not an object)", file=sys.stderr)
             return None
         reports.append(data)

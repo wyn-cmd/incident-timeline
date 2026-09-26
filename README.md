@@ -57,8 +57,8 @@ An address is `correlated` when it shows up in both reports, `network-only` when
 ## Options
 
 ```
---pcap FILE              a pcap-triage --json report; repeat for more than one
---auth FILE              an authlog-sessions --json report; repeat for more than one
+--pcap FILE              a pcap-triage --json report, or - for stdin; repeat for more than one
+--auth FILE              an authlog-sessions --json report, or - for stdin; repeat for more than one
 -n, --top N              addresses to print in full, default 20
 --only-correlated        print only addresses seen in both sources
 --csv                    print the addresses table as CSV, unaffected by --top
@@ -81,7 +81,7 @@ An address is `correlated` when it shows up in both reports, `network-only` when
 python3 -m unittest discover tests
 ```
 
-Fourteen tests covering the merge of several reports on each side, the correlation itself, and the overlap check, including the UTC-versus-naive-timestamp case that motivated writing it as its own function rather than inlining the comparison.
+Fourteen tests covering the merge of several reports on each side, the correlation itself, and the overlap check, including the UTC-versus-naive-timestamp case that motivated writing it as its own function rather than inlining the comparison, plus a full command line suite covering the error paths a malformed or wrong-shaped report file can take and stdin support via `-`.
 
 ## How the code is laid out
 

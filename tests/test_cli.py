@@ -57,5 +57,32 @@ class LoadErrorTests(unittest.TestCase):
         self.assertIn("--auth", err)
 
 
+    def test_a_dash_reads_from_stdin(self):
+        payload = json.dumps({"first_timestamp": 1.0, "last_timestamp": 2.0,
+                              "talkers": [], "notable": []})
+        old_stdin = sys.stdin
+        sys.stdin = io.StringIO(payload)
+        try:
+            code, out, err = run(["--pcap", "-"])
+        finally:
+            sys.stdin = old_stdin
+        # No entities in an empty report is a clean "nothing to correlate",
+        # not a crash: the point of this test is that stdin was actually read.
+        self.assertEqual(code, 1)
+        self.assertIn("nothing to correlate", err)
+
+    def test_dash_twice_for_the_same_flag_is_a_clean_error(self):
+        payload = json.dumps({"first_timestamp": 1.0, "last_timestamp": 2.0,
+                              "talkers": [], "notable": []})
+        old_stdin = sys.stdin
+        sys.stdin = io.StringIO(payload)
+        try:
+            code, out, err = run(["--pcap", "-", "--pcap", "-"])
+        finally:
+            sys.stdin = old_stdin
+        self.assertEqual(code, 2)
+        self.assertIn("only be read once", err)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
