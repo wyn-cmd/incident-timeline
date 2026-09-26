@@ -57,6 +57,17 @@ class Correlated:
         return "auth-only"
 
     @property
+    def total_events(self):
+        # Network packets plus auth events, one combined activity count for
+        # a --min-events filter to sort noise from signal on either side.
+        total = 0
+        if self.network:
+            total += self.network.get("packets", 0)
+        if self.auth:
+            total += self.auth.get("events", 0)
+        return total
+
+    @property
     def findings(self):
         # Network findings first: a scan or a leak on the wire is a fact
         # about the wire independent of what the auth log says, and reading

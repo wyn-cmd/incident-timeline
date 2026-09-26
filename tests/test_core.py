@@ -172,5 +172,19 @@ class CorrelateTests(unittest.TestCase):
         self.assertIsNone(by_address["1.1.1.1"].overlaps_capture_window(cap_first, cap_last))
 
 
+    def test_total_events_combines_packets_and_auth_events(self):
+        pcap = pcap_report([{"src": "1.1.1.1", "dst": "2.2.2.2", "packets": 10, "bytes": 100}])
+        auth = auth_report([{"address": "1.1.1.1", "first": "2024-01-01T00:00:00",
+                             "last": "2024-01-01T00:01:00", "events": 5, "failures": 5,
+                             "successes": 0, "succeeded_as": [], "outcome": "x"}])
+        entities, _, _ = core.correlate([pcap], [auth])
+        by_address = {e.address: e for e in entities}
+        self.assertEqual(by_address["1.1.1.1"].total_events, 15)
+
+    def test_total_events_is_zero_for_an_empty_entity(self):
+        entity = core.Correlated("9.9.9.9")
+        self.assertEqual(entity.total_events, 0)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

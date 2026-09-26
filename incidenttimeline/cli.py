@@ -25,6 +25,9 @@ def build_parser():
                         help="print the addresses table as CSV")
     parser.add_argument("--only-correlated", action="store_true",
                         help="print only addresses seen in both sources")
+    parser.add_argument("--min-events", type=int, default=0, metavar="N",
+                        help="drop an address with fewer than N network packets"
+                             " plus auth events combined (default: 0, keep everything)")
     parser.add_argument("--fail-on-correlated", action="store_true",
                         help="exit 3 when any address appears in both sources, for a pipeline")
     parser.add_argument("--version", action="version",
@@ -74,6 +77,10 @@ def main(argv=None):
         print("incident-timeline: --top has to be at least 1", file=sys.stderr)
         return 2
 
+    if args.min_events < 0:
+        print("incident-timeline: --min-events cannot be negative", file=sys.stderr)
+        return 2
+
     pcap_reports = _load(args.pcap, "--pcap")
     if pcap_reports is None:
         return 2
@@ -91,6 +98,13 @@ def main(argv=None):
         entities = [entity for entity in entities if entity.verdict == "correlated"]
         if not entities:
             print("incident-timeline: nothing was seen in both sources", file=sys.stderr)
+            return 1
+
+    if args.min_events > 0:
+        entities = [entity for entity in entities if entity.total_events >= args.min_events]
+        if not entities:
+            print(f"incident-timeline: no address reached --min-events {args.min_events}",
+                  file=sys.stderr)
             return 1
 
     correlated = any(entity.verdict == "correlated" for entity in entities)

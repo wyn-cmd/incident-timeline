@@ -61,6 +61,7 @@ An address is `correlated` when it shows up in both reports, `network-only` when
 --auth FILE              an authlog-sessions --json report, or - for stdin; repeat for more than one
 -n, --top N              addresses to print in full, default 20
 --only-correlated        print only addresses seen in both sources
+--min-events N           drop an address with fewer than N network packets plus auth events combined
 --csv                    print the addresses table as CSV, unaffected by --top
 --json                   print the correlation as JSON instead of a report
 --fail-on-correlated     exit 3 when any address appears in both sources, for a pipeline

@@ -84,5 +84,31 @@ class LoadErrorTests(unittest.TestCase):
         self.assertIn("only be read once", err)
 
 
+class MinEventsTests(unittest.TestCase):
+    def setUp(self):
+        self.work = tempfile.mkdtemp(prefix="incident-timeline-cli-test-")
+        self.addCleanup(lambda: __import__("shutil").rmtree(self.work, ignore_errors=True))
+        self.pcap_path = os.path.join(self.work, "pcap.json")
+        with open(self.pcap_path, "w") as handle:
+            json.dump({"first_timestamp": 1.0, "last_timestamp": 2.0,
+                       "talkers": [{"src": "1.1.1.1", "dst": "2.2.2.2", "packets": 10, "bytes": 100}],
+                       "notable": []}, handle)
+
+    def test_a_high_threshold_drops_everything_cleanly(self):
+        code, out, err = run(["--pcap", self.pcap_path, "--min-events", "1000"])
+        self.assertEqual(code, 1)
+        self.assertIn("no address reached", err)
+
+    def test_a_low_threshold_keeps_everything(self):
+        code, out, err = run(["--pcap", self.pcap_path, "--min-events", "1", "--csv"])
+        self.assertEqual(code, 0)
+        self.assertIn("1.1.1.1", out)
+
+    def test_a_negative_threshold_is_a_clean_error(self):
+        code, out, err = run(["--pcap", self.pcap_path, "--min-events", "-1"])
+        self.assertEqual(code, 2)
+        self.assertIn("cannot be negative", err)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
