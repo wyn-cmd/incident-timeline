@@ -91,6 +91,14 @@ class MergeAuthTests(unittest.TestCase):
         addresses = core.merge_auth_reports([a, b])
         self.assertEqual(addresses["1.1.1.1"]["succeeded_as"], ["root"])
 
+    def test_a_source_missing_an_address_is_skipped_not_a_crash(self):
+        report = {"sources": [{"first": "2024-01-01T00:00:00", "last": "2024-01-01T00:01:00",
+                              "events": 1, "failures": 0, "successes": 1,
+                              "succeeded_as": [], "outcome": "x"}],
+                  "findings": []}
+        addresses = core.merge_auth_reports([report])
+        self.assertEqual(addresses, {})
+
 
 class CorrelateTests(unittest.TestCase):
     def test_an_address_in_both_sources_is_correlated(self):

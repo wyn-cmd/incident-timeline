@@ -160,9 +160,10 @@ def merge_auth_reports(reports):
     addresses = {}
 
     for report in reports:
-        by_address = {line.split(" ", 1)[0]: line for line in report.get("findings", [])}
         for source in report.get("sources", []):
-            address = source["address"]
+            address = source.get("address")
+            if not address:
+                continue
             entry = addresses.get(address)
             if entry is None:
                 entry = {
