@@ -145,6 +145,15 @@ class CorrelateTests(unittest.TestCase):
         self.assertIsNone(cap_first)
         self.assertIsNone(cap_last)
 
+    def test_a_malformed_timestamp_reports_unknown_not_crash(self):
+        pcap = pcap_report([{"src": "1.1.1.1", "dst": "9.9.9.9", "packets": 1, "bytes": 1}])
+        auth = auth_report([{"address": "1.1.1.1", "first": "not-a-date",
+                             "last": "2023-01-01T00:00:00", "events": 1, "failures": 1,
+                             "successes": 0, "succeeded_as": [], "outcome": "x"}])
+        entities, cap_first, cap_last = core.correlate([pcap], [auth])
+        by_address = {e.address: e for e in entities}
+        self.assertIsNone(by_address["1.1.1.1"].overlaps_capture_window(cap_first, cap_last))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

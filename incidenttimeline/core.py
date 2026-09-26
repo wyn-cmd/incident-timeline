@@ -34,7 +34,11 @@ def _mentions_address(line, address):
 def _parse_iso(value):
     if not value:
         return None
-    return datetime.fromisoformat(value)
+    try:
+        return datetime.fromisoformat(value)
+    except (TypeError, ValueError):
+        # A malformed timestamp must not take the whole report down.
+        return None
 
 
 class Correlated:
