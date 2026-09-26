@@ -110,5 +110,22 @@ class MinEventsTests(unittest.TestCase):
         self.assertIn("cannot be negative", err)
 
 
+class ConflictingFlagsTests(unittest.TestCase):
+    def setUp(self):
+        self.work = tempfile.mkdtemp(prefix="incident-timeline-cli-test-")
+        self.addCleanup(lambda: __import__("shutil").rmtree(self.work, ignore_errors=True))
+        self.pcap_path = os.path.join(self.work, "pcap.json")
+        with open(self.pcap_path, "w") as handle:
+            json.dump({"first_timestamp": 1.0, "last_timestamp": 2.0,
+                       "talkers": [{"src": "1.1.1.1", "dst": "2.2.2.2", "packets": 10, "bytes": 100}],
+                       "notable": []}, handle)
+
+    def test_csv_and_json_together_is_a_clean_error(self):
+        code, out, err = run(["--pcap", self.pcap_path, "--csv", "--json"])
+        self.assertEqual(code, 2)
+        self.assertIn("cannot be used together", err)
+        self.assertEqual(out, "")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

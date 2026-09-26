@@ -62,8 +62,8 @@ An address is `correlated` when it shows up in both reports, `network-only` when
 -n, --top N              addresses to print in full, default 20
 --only-correlated        print only addresses seen in both sources
 --min-events N           drop an address with fewer than N network packets plus auth events combined
---csv                    print the addresses table as CSV, unaffected by --top
---json                   print the correlation as JSON instead of a report
+--csv                    print the addresses table as CSV, unaffected by --top (cannot combine with --json)
+--json                   print the correlation as JSON instead of a report (cannot combine with --csv)
 --fail-on-correlated     exit 3 when any address appears in both sources, for a pipeline
 ```
 

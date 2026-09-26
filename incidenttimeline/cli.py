@@ -81,6 +81,10 @@ def main(argv=None):
         print("incident-timeline: --min-events cannot be negative", file=sys.stderr)
         return 2
 
+    if args.csv and args.json:
+        print("incident-timeline: --csv and --json cannot be used together", file=sys.stderr)
+        return 2
+
     pcap_reports = _load(args.pcap, "--pcap")
     if pcap_reports is None:
         return 2
