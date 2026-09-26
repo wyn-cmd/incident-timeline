@@ -45,6 +45,15 @@ def _parse_iso(value):
         return None
 
 
+def _as_list(value):
+    # talkers, notable, sources and findings are all supposed to be JSON
+    # arrays, but a hand-edited or third-party report can put anything
+    # there. report.get(key, []) only helps when the key is missing, not
+    # when it is present with the wrong type, so this checks the type
+    # itself and treats anything that is not a list as empty.
+    return value if isinstance(value, list) else []
+
+
 class Correlated:
     # Everything known about one address, from either or both sources.
     def __init__(self, address):
@@ -134,8 +143,10 @@ def merge_pcap_reports(reports):
             capture_last = last if capture_last is None else max(capture_last, last)
 
         seen_here = set()
-        for talker in report.get("talkers", []):
+        for talker in _as_list(report.get("talkers")):
             # A talker with no src or no dst names no conversation at all.
+            if not isinstance(talker, dict):
+                continue
             src = talker.get("src")
             dst = talker.get("dst")
             if not src or not dst:
@@ -147,12 +158,14 @@ def merge_pcap_reports(reports):
             entry = addresses.setdefault(address, {
                 "packets": 0, "bytes": 0, "notable": [],
             })
-            for talker in report.get("talkers", []):
+            for talker in _as_list(report.get("talkers")):
+                if not isinstance(talker, dict):
+                    continue
                 if talker.get("src") == address or talker.get("dst") == address:
                     entry["packets"] += talker.get("packets", 0)
                     entry["bytes"] += talker.get("bytes", 0)
 
-        for line in report.get("notable", []):
+        for line in _as_list(report.get("notable")):
             # Not every notable line opens with the address: most do
             # ("SRC reached N different ports"), but at least one opens
             # with a count instead ("N requests from SRC to DST carried
@@ -175,7 +188,9 @@ def merge_auth_reports(reports):
     addresses = {}
 
     for report in reports:
-        for source in report.get("sources", []):
+        for source in _as_list(report.get("sources")):
+            if not isinstance(source, dict):
+                continue
             address = source.get("address")
             if not address:
                 continue
@@ -200,7 +215,7 @@ def merge_auth_reports(reports):
             if source.get("last") and (not entry["last"] or source["last"] > entry["last"]):
                 entry["last"] = source["last"]
 
-        for line in report.get("findings", []):
+        for line in _as_list(report.get("findings")):
             if not isinstance(line, str):
                 continue
             address = line.split(" ", 1)[0]
