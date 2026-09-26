@@ -21,6 +21,10 @@ def _mentions_address(line, address):
     # and colons an address is built from, and the boundaries either side
     # are checked by hand since \b does not fire around punctuation like a
     # dot the way it does around letters and digits.
+    if not isinstance(line, str):
+        # A hand-edited or third-party report can put anything in a notable
+        # or findings list; only a real line of text can mention an address.
+        return False
     pattern = re.escape(address)
     for match in re.finditer(pattern, line):
         start, end = match.span()
@@ -197,6 +201,8 @@ def merge_auth_reports(reports):
                 entry["last"] = source["last"]
 
         for line in report.get("findings", []):
+            if not isinstance(line, str):
+                continue
             address = line.split(" ", 1)[0]
             if address in addresses and line not in addresses[address]["notable"]:
                 addresses[address]["notable"].append(line)

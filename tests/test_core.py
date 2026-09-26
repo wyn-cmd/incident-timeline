@@ -61,6 +61,14 @@ class MergePcapTests(unittest.TestCase):
         self.assertEqual(addresses["1.1.1.1"]["packets"], 5)
         self.assertEqual(len(addresses), 2)
 
+    def test_a_non_string_notable_entry_is_skipped_not_a_crash(self):
+        report = {"first_timestamp": 100.0, "last_timestamp": 200.0,
+                  "talkers": [{"src": "1.1.1.1", "dst": "2.2.2.2", "packets": 1, "bytes": 1}],
+                  "notable": [123, None, "1.1.1.1 did a thing"]}
+        addresses, _, _ = core.merge_pcap_reports([report])
+        self.assertEqual(addresses["1.1.1.1"]["notable"], ["1.1.1.1 did a thing"])
+
+
 
 class MergeAuthTests(unittest.TestCase):
     def test_a_single_source_is_recorded(self):
@@ -98,6 +106,15 @@ class MergeAuthTests(unittest.TestCase):
                   "findings": []}
         addresses = core.merge_auth_reports([report])
         self.assertEqual(addresses, {})
+
+
+    def test_a_non_string_findings_entry_is_skipped_not_a_crash(self):
+        report = {"sources": [{"address": "1.1.1.1", "first": "2024-01-01T00:00:00",
+                              "last": "2024-01-01T00:01:00", "events": 1, "failures": 1,
+                              "successes": 0, "succeeded_as": [], "outcome": "x"}],
+                  "findings": [123, None, "1.1.1.1 failed a lot"]}
+        addresses = core.merge_auth_reports([report])
+        self.assertEqual(addresses["1.1.1.1"]["notable"], ["1.1.1.1 failed a lot"])
 
 
 class CorrelateTests(unittest.TestCase):
