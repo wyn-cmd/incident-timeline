@@ -11,6 +11,24 @@
 # is the fact of the overlap, not a fabricated shared clock.
 
 from datetime import datetime, timezone
+import re
+
+
+def _mentions_address(line, address):
+    # A whole-token match rather than a substring match: "10.0.0.1" must not
+    # match inside "10.0.0.10", and an IPv6 address must not match inside a
+    # longer one that happens to share a prefix. re.escape handles the dots
+    # and colons an address is built from, and the boundaries either side
+    # are checked by hand since \b does not fire around punctuation like a
+    # dot the way it does around letters and digits.
+    pattern = re.escape(address)
+    for match in re.finditer(pattern, line):
+        start, end = match.span()
+        before = line[start - 1] if start > 0 else " "
+        after = line[end] if end < len(line) else " "
+        if not (before.isalnum() or before in ".:") and not (after.isalnum() or after in ".:"):
+            return True
+    return False
 
 
 def _parse_iso(value):
@@ -111,8 +129,15 @@ def merge_pcap_reports(reports):
                     entry["bytes"] += talker.get("bytes", 0)
 
         for line in report.get("notable", []):
+            # Not every notable line opens with the address: most do
+            # ("SRC reached N different ports"), but at least one opens
+            # with a count instead ("N requests from SRC to DST carried
+            # credentials..."), and one names no address at all. So every
+            # candidate address is checked, but as a whole word rather than
+            # a substring, since a plain "if address in line" credits
+            # 10.0.0.1 with a finding that actually names 10.0.0.10.
             for address in seen_here:
-                if address in line and line not in addresses[address]["notable"]:
+                if _mentions_address(line, address) and line not in addresses[address]["notable"]:
                     addresses[address]["notable"].append(line)
 
     return addresses, capture_first, capture_last

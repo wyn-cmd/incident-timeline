@@ -21,6 +21,10 @@ def build_parser():
                         help="addresses to print in full (default: 20)")
     parser.add_argument("--json", action="store_true",
                         help="print the correlation as JSON instead of a report")
+    parser.add_argument("--csv", action="store_true",
+                        help="print the addresses table as CSV")
+    parser.add_argument("--only-correlated", action="store_true",
+                        help="print only addresses seen in both sources")
     parser.add_argument("--fail-on-correlated", action="store_true",
                         help="exit 3 when any address appears in both sources, for a pipeline")
     parser.add_argument("--version", action="version",
@@ -63,9 +67,17 @@ def main(argv=None):
         print("incident-timeline: nothing to correlate in those reports", file=sys.stderr)
         return 1
 
+    if args.only_correlated:
+        entities = [entity for entity in entities if entity.verdict == "correlated"]
+        if not entities:
+            print("incident-timeline: nothing was seen in both sources", file=sys.stderr)
+            return 1
+
     correlated = any(entity.verdict == "correlated" for entity in entities)
 
-    if args.json:
+    if args.csv:
+        print(report.as_csv(entities, capture_first, capture_last), end="")
+    elif args.json:
         print(json.dumps(report.as_dict(entities, capture_first, capture_last), indent=2))
     else:
         print(report.render(entities, capture_first, capture_last, top=args.top), end="")

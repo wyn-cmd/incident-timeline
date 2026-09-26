@@ -36,6 +36,38 @@ def render(entities, capture_first, capture_last, top=20):
     return "\n".join(out)
 
 
+def _csv_field(value):
+    # Quote a field if it holds anything that would break the row, the
+    # same rule authlog-sessions uses for its own CSV output.
+    value = str(value)
+    if any(character in value for character in ',"\n'):
+        return '"' + value.replace('"', '""') + '"'
+    return value
+
+
+def as_csv(entities, capture_first, capture_last):
+    # One row per address, for a spreadsheet or another script. Unlike the
+    # text report this does not truncate to --top, since a CSV consumer can
+    # do its own filtering and truncating silently here would be a second,
+    # hidden --top a script would not know to look for.
+    rows = ["address,verdict,network_packets,network_bytes,auth_events,"
+            "auth_failures,auth_successes,overlaps_capture_window"]
+    for entity in entities:
+        overlap = entity.overlaps_capture_window(capture_first, capture_last)
+        fields = (
+            entity.address,
+            entity.verdict,
+            str(entity.network["packets"]) if entity.network else "",
+            str(entity.network["bytes"]) if entity.network else "",
+            str(entity.auth["events"]) if entity.auth else "",
+            str(entity.auth["failures"]) if entity.auth else "",
+            str(entity.auth["successes"]) if entity.auth else "",
+            "" if overlap is None else str(overlap),
+        )
+        rows.append(",".join(_csv_field(field) for field in fields))
+    return "\n".join(rows) + "\n"
+
+
 def as_dict(entities, capture_first, capture_last):
     return {
         "capture_first": capture_first,

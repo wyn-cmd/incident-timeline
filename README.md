@@ -60,6 +60,8 @@ An address is `correlated` when it shows up in both reports, `network-only` when
 --pcap FILE              a pcap-triage --json report; repeat for more than one
 --auth FILE              an authlog-sessions --json report; repeat for more than one
 -n, --top N              addresses to print in full, default 20
+--only-correlated        print only addresses seen in both sources
+--csv                    print the addresses table as CSV, unaffected by --top
 --json                   print the correlation as JSON instead of a report
 --fail-on-correlated     exit 3 when any address appears in both sources, for a pipeline
 ```
