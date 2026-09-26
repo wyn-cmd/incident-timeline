@@ -120,15 +120,20 @@ def merge_pcap_reports(reports):
 
         seen_here = set()
         for talker in report.get("talkers", []):
-            seen_here.add(talker["src"])
-            seen_here.add(talker["dst"])
+            # A talker with no src or no dst names no conversation at all.
+            src = talker.get("src")
+            dst = talker.get("dst")
+            if not src or not dst:
+                continue
+            seen_here.add(src)
+            seen_here.add(dst)
 
         for address in seen_here:
             entry = addresses.setdefault(address, {
                 "packets": 0, "bytes": 0, "notable": [],
             })
             for talker in report.get("talkers", []):
-                if talker["src"] == address or talker["dst"] == address:
+                if talker.get("src") == address or talker.get("dst") == address:
                     entry["packets"] += talker.get("packets", 0)
                     entry["bytes"] += talker.get("bytes", 0)
 

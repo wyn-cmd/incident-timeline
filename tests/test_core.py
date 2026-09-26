@@ -52,6 +52,15 @@ class MergePcapTests(unittest.TestCase):
         self.assertEqual(addresses["1.1.1.1"]["packets"], 8)
         self.assertEqual(addresses["1.1.1.1"]["bytes"], 800)
 
+    def test_a_talker_missing_src_or_dst_is_skipped_not_a_crash(self):
+        report = {"first_timestamp": 100.0, "last_timestamp": 200.0,
+                  "talkers": [{"packets": 1, "bytes": 1},
+                              {"src": "1.1.1.1", "dst": "2.2.2.2", "packets": 5, "bytes": 500}],
+                  "notable": []}
+        addresses, _, _ = core.merge_pcap_reports([report])
+        self.assertEqual(addresses["1.1.1.1"]["packets"], 5)
+        self.assertEqual(len(addresses), 2)
+
 
 class MergeAuthTests(unittest.TestCase):
     def test_a_single_source_is_recorded(self):
