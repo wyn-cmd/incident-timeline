@@ -37,8 +37,7 @@ def render(entities, capture_first, capture_last, top=20):
 
 
 def _csv_field(value):
-    # Quote a field if it holds anything that would break the row, the
-    # same rule authlog-sessions uses for its own CSV output.
+    # Quote a field if it holds anything that would break the row, the same rule authlog-sessions uses for its own CSV output.
     value = str(value)
     if any(character in value for character in ',"\n'):
         return '"' + value.replace('"', '""') + '"'
@@ -46,12 +45,9 @@ def _csv_field(value):
 
 
 def as_csv(entities, capture_first, capture_last):
-    # One row per address, for a spreadsheet or another script. Unlike the
-    # text report this does not truncate to --top, since a CSV consumer can
-    # do its own filtering and truncating silently here would be a second,
-    # hidden --top a script would not know to look for.
-    rows = ["address,verdict,network_packets,network_bytes,auth_events,"
-            "auth_failures,auth_successes,overlaps_capture_window"]
+    # One row per address, for a spreadsheet or another script. Unlike the text report this does not truncate to top, since a CSV consumer can do its own filtering and truncating silently here would be a second, hidden top a script would not know to look for.
+    header = "address,verdict,network_packets,network_bytes,auth_events,auth_failures,auth_successes,overlaps_capture_window"
+    rows = [header]
     for entity in entities:
         overlap = entity.overlaps_capture_window(capture_first, capture_last)
         fields = (
