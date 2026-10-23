@@ -57,6 +57,10 @@ def _load(paths, kind):
             name = "stdin" if path == "-" else path
             print(f"incident-timeline: {name} is not valid JSON: {error}", file=sys.stderr)
             return None
+        except OSError as error:
+            name = "stdin" if path == "-" else path
+            print(f"incident-timeline: cannot read {name}: {error}", file=sys.stderr)
+            return None
         if not isinstance(data, dict):
             name = "stdin" if path == "-" else path
             print(f"incident-timeline: {name} is not a {kind} report "
